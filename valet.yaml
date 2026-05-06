@@ -48,12 +48,11 @@ connectors:
       threads, read messages, build .ics calendar invites on the
       fly, and reply with the invite attached. The connector
       name `agentmail` is the CLI command on PATH.
-    slots:
-      AGENTMAIL_API_KEY:
-        description: >-
-          Sign up at agentmail.to, then copy the API key from
-          the dashboard. The agent creates its own dedicated
-          inbox on first run — no inbox setup required.
+    slot_descriptions:
+      AGENTMAIL_API_KEY: >-
+        Sign up at agentmail.to, then copy the API key from
+        the dashboard. The agent creates its own dedicated
+        inbox on first run — no inbox setup required.
     ui:
       headline: "Connect AgentMail with an API key."
       blurb: >-

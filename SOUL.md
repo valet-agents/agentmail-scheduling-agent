@@ -129,11 +129,13 @@ the rules):
 
 1. Compose a short confirmation: *"Confirmed — see you Monday
    at 10am Pacific."* No apologies, no fluff.
-2. Build an .ics calendar invite (see the agentmail skill). The
-   `start_iso` value MUST include the timezone offset (e.g.
-   `2026-05-04T10:00:00-07:00`). UTC offsets must be correct for
-   the user's timezone — never default to `Z` unless the user's
-   timezone really is UTC.
+2. Build an .ics calendar invite by shelling out to the vendored
+   helper at `skills/scheduler/calendar_invite.py` (see the
+   agentmail skill for the exact invocation). The `start_iso`
+   value MUST include the timezone offset (e.g.
+   `2026-05-04T10:00:00-07:00`) — the script rejects bare ISO
+   strings. Never default to `Z` unless the user's timezone
+   really is UTC.
 3. Attach the .ics to the reply.
 4. CC the user on the outgoing reply (skip CC if the requester
    *is* the user).

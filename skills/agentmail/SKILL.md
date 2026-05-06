@@ -82,45 +82,35 @@ Outlook, Apple Mail) auto-detect `text/calendar` attachments and
 offer "Add to calendar" with one click. No external calendar API
 required.
 
+The agent does NOT construct the .ics body inline. There's a
+vendored helper at `skills/scheduler/calendar_invite.py` (pure
+stdlib Python, taken from the upstream AgentMail template) that
+handles RFC 5545 escaping, UTC conversion, and the VEVENT shape.
+The agent shells out to it.
+
 When the requester confirms a slot:
 
-1. Build the .ics body. Substitute the four variables — title,
-   start (in UTC), end (in UTC), and uid. The `start_iso` you
-   collected from the agent's earlier offer must include the
-   user's timezone offset (e.g. `2026-05-04T10:00:00-07:00`);
-   convert to UTC for `DTSTART` / `DTEND` (suffix `Z`):
-
-     BEGIN:VCALENDAR
-     VERSION:2.0
-     PRODID:-//AgentMail Scheduling Agent//EN
-     METHOD:REQUEST
-     CALSCALE:GREGORIAN
-     BEGIN:VEVENT
-     UID:<uuid>@agentmail-scheduling-agent
-     DTSTAMP:<now-utc, basic format YYYYMMDDTHHMMSSZ>
-     DTSTART:<start-utc, basic format YYYYMMDDTHHMMSSZ>
-     DTEND:<end-utc, basic format YYYYMMDDTHHMMSSZ>
-     SUMMARY:<meeting title — escape ; , \\ \\n>
-     DESCRIPTION:<short description — same escaping>
-     ORGANIZER;CN=<inbox-email>:mailto:<inbox-email>
-     ATTENDEE;RSVP=TRUE;CN=<requester>;ROLE=REQ-PARTICIPANT:mailto:<requester>
-     ATTENDEE;RSVP=TRUE;CN=<user-email>;ROLE=REQ-PARTICIPANT:mailto:<user-email>
-     STATUS:CONFIRMED
-     SEQUENCE:0
-     END:VEVENT
-     END:VCALENDAR
-
-   Lines must be CRLF-separated. Escape `;`, `,`, `\\`, and
-   newline characters in any quoted field.
-
-2. Write the .ics to a temp file:
+1. Build the .ics. The `start_iso` you collected from the agent's
+   earlier offer must include the user's timezone offset (e.g.
+   `2026-05-04T10:00:00-07:00`). The script rejects bare ISO
+   strings without an offset — that's intentional, never default
+   to UTC unless the user's timezone is UTC.
 
      ICS_FILE=$(mktemp -t invite.XXXXXX).ics
-     cat > "$ICS_FILE" <<'EOF'
-     ...the .ics body above...
-     EOF
+     python3 skills/scheduler/calendar_invite.py \
+       --title "$MEETING_TITLE" \
+       --start-iso "$START_ISO_WITH_OFFSET" \
+       --duration-minutes "$DURATION" \
+       --organizer "$INBOX_EMAIL" \
+       --attendee "$REQUESTER_EMAIL" \
+       --attendee "$USER_EMAIL" \
+       --description "Scheduled by the AgentMail scheduling agent." \
+       > "$ICS_FILE"
 
-3. Reply with the attachment:
+   Pass `--attendee` once per attendee. If the requester's email
+   matches `$USER_EMAIL`, drop the second `--attendee`.
+
+2. Reply with the attachment:
 
      PAGER=cat agentmail --format json messages reply \
        --inbox $INBOX_ID \
@@ -138,7 +128,7 @@ When the requester confirms a slot:
    `--cc` is omitted if the requester's email matches
    `$USER_EMAIL` (avoid CC'ing the user back to themselves).
 
-4. Mark the inbound message read so duplicate webhook fires don't
+3. Mark the inbound message read so duplicate webhook fires don't
    re-trigger:
 
      PAGER=cat agentmail messages update \

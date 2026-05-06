@@ -6,7 +6,9 @@ Ported from the upstream [AgentMail Scheduling Agent](https://github.com/agentma
 
 ### Connectors
 
-- **agentmail**: The AgentMail CLI, preconfigured with the API key from the connector slot. The connector name `agentmail` IS the CLI command on PATH — invoke it as `agentmail`, never as `npx agentmail-cli` or any npm package name. The agent uses it to list/create the dedicated inbox, list threads, read messages, build .ics calendar invites on the fly, and reply with the invite attached. See `skills/agentmail/SKILL.md` for invocation patterns.
+- **agentmail**: The AgentMail CLI, preconfigured with the API key from the connector slot. The connector name `agentmail` IS the CLI command on PATH — invoke it as `agentmail`, never as `npx agentmail-cli` or any npm package name. The agent uses it to list/create the dedicated inbox, list threads, read messages, and reply with the .ics invite attached. See `skills/agentmail/SKILL.md` for invocation patterns.
+
+The .ics body itself is built by `skills/scheduler/calendar_invite.py` — a stdlib-only Python helper vendored verbatim from the upstream AgentMail template. It runs as `python3 skills/scheduler/calendar_invite.py --title ... --start-iso ... > /tmp/invite.ics`, rejects bare ISO strings without a timezone offset, and writes RFC 5545 to stdout. Requires `python3` on the agent runtime — no `pip install` needed.
 
 ### Channels
 

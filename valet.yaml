@@ -1,0 +1,88 @@
+name: agentmail-scheduling-agent
+display_name: AgentMail Scheduling Agent
+description: >-
+  A scheduling assistant that lives in its own AgentMail inbox.
+  People email it to book time with you. It classifies the
+  request, checks the rules you set, offers three slots, and
+  attaches a one-click calendar invite the moment a slot is
+  confirmed. No Google Calendar OAuth, no Calendly subscription.
+category: sales
+
+example:
+  prompt: "What's pending right now?"
+
+story:
+  hero: "An inbox that books your meetings while you sleep."
+  subheadline: >-
+    A dedicated AgentMail inbox negotiates time with whoever
+    emails it, follows your rules, and attaches an .ics calendar
+    invite the moment a slot is confirmed. You stay CC'd. Slack
+    is your console.
+  steps:
+    - role: trigger
+      title: "Someone emails the agent's inbox to book time."
+      body: >-
+        AgentMail fires a webhook the instant the message lands.
+        The agent fetches the full thread and reads the request.
+      catalog: webhook
+    - role: action
+      title: "It classifies, checks the rules, and offers three slots."
+      body: >-
+        Sales, internal, or personal — each with its own rules.
+        The agent picks three open slots at least 24h out and
+        replies with the options.
+      catalog: agentmail
+    - role: outcome
+      title: "On confirmation, an .ics invite is attached."
+      body: >-
+        Gmail, Outlook, and Apple Mail auto-detect the .ics and
+        offer one-click "Add to calendar" for both attendees. You
+        stay CC'd.
+      catalog: agentmail
+
+connectors:
+  - catalog: agentmail
+    description: >-
+      The AgentMail CLI, preconfigured with your API key. The
+      agent uses it to list and create the dedicated inbox, list
+      threads, read messages, build .ics calendar invites on the
+      fly, and reply with the invite attached. The connector
+      name `agentmail` is the CLI command on PATH.
+    slots:
+      AGENTMAIL_API_KEY:
+        description: >-
+          Sign up at agentmail.to, then copy the API key from
+          the dashboard. The agent creates its own dedicated
+          inbox on first run — no inbox setup required.
+    ui:
+      headline: "Connect AgentMail with an API key."
+      blurb: >-
+        Mint an API key at agentmail.to (Settings → API Keys)
+        and paste it here. The agent creates its dedicated
+        scheduling inbox the first time the webhook fires.
+      done_note: "AgentMail connected"
+
+channels:
+  - catalog: slack
+    description: >-
+      The agent gets its own Slack bot — your console for the
+      inbox. @mention it to see what's pending, push a manual
+      reply on a thread, or update the scheduling rules. Reply
+      restraint: it only answers when @mentioned, only in the
+      originating thread, and confirms before any send.
+    ui:
+      headline: "Give the Scheduler a Slack bot."
+      blurb: >-
+        Invite the bot to one channel where you want a window
+        into the inbox. @mention it to ask what's pending, send
+        manual replies, or change the rules.
+      done_note: "Bot ready — invite it to a channel"
+
+  - catalog: webhook
+    description: >-
+      Generic webhook channel that fires the agent on every
+      AgentMail `message.received` event. After deploy, run the
+      one-liner `agentmail webhooks create --url <agent-webhook-url>
+      --event message.received` from your terminal (or once,
+      from the Slack bot) so AgentMail starts pushing each new
+      email to the agent in real time.

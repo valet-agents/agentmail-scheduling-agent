@@ -7,9 +7,10 @@
 A dedicated AgentMail inbox negotiates time with whoever emails it, follows your rules, and attaches an .ics calendar invite the moment a slot is confirmed. You stay CC'd. Slack is your console.
 
 ## Prerequisites
-- An [AgentMail](https://agentmail.to) account (mint an API key in the dashboard)
+- An [AgentMail](https://agentmail.to) account (mint an API key in the dashboard — you'll paste it into the `AGENTMAIL_API_KEY` slot during deploy)
 - A Slack workspace where you can install the agent's bot and invite it to one channel
 - The ability to subscribe an AgentMail webhook to a public URL (the agent's webhook URL is provisioned automatically — you'll paste it into one CLI command after deploy)
+- **Edit the Configuration section at the top of `SOUL.md` before clicking deploy** — name, email, timezone, scheduling rules. The placeholders (`<EDIT — ...>`) make it obvious what to replace. Save the file before deploy.
 
 <table>
   <tr>

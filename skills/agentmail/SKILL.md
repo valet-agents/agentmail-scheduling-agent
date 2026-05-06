@@ -103,12 +103,15 @@ When the requester confirms a slot:
        --duration-minutes "$DURATION" \
        --organizer "$INBOX_EMAIL" \
        --attendee "$REQUESTER_EMAIL" \
-       --attendee "$USER_EMAIL" \
+       --attendee "$YOUR_EMAIL" \
        --description "Scheduled by the AgentMail scheduling agent." \
        > "$ICS_FILE"
 
-   Pass `--attendee` once per attendee. If the requester's email
-   matches `$USER_EMAIL`, drop the second `--attendee`.
+   `$YOUR_EMAIL` is the **Your email** value from the SOUL.md
+   Configuration section at the top of `SOUL.md` — read it from
+   there each fire. Pass `--attendee` once per attendee. If the
+   requester's email matches **Your email**, drop the second
+   `--attendee` so the user isn't invited twice.
 
 2. Reply with the attachment:
 
@@ -116,7 +119,7 @@ When the requester confirms a slot:
        --inbox $INBOX_ID \
        --id $MESSAGE_ID \
        --text "$REPLY_BODY" \
-       --cc $USER_EMAIL \
+       --cc $YOUR_EMAIL \
        --attach "$ICS_FILE"
 
    Verify the exact attachment flag with
@@ -125,8 +128,9 @@ When the requester confirms a slot:
    file path directly, fall back to the inline base64 form
    documented in `agentmail messages send --help` and adapt.
 
-   `--cc` is omitted if the requester's email matches
-   `$USER_EMAIL` (avoid CC'ing the user back to themselves).
+   `--cc` is omitted if the requester's email matches **Your
+   email** in the SOUL.md Configuration section (avoid CC'ing the
+   user back to themselves).
 
 3. Mark the inbound message read so duplicate webhook fires don't
    re-trigger:
@@ -145,9 +149,10 @@ When the agent is offering slots or asking a clarifying question
     --inbox $INBOX_ID \
     --id $MESSAGE_ID \
     --text "$REPLY_BODY" \
-    --cc $USER_EMAIL
+    --cc $YOUR_EMAIL
 
-Same `--cc` rule: skip if requester is the user.
+Same `--cc` rule: skip if the requester's email matches **Your
+email** in the SOUL.md Configuration section.
 
 ─── Subscribing AgentMail webhooks to the agent ─────────────────
 

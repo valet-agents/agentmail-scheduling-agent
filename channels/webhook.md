@@ -14,9 +14,9 @@ these are true:
 - `event_type` is anything other than `message.received`.
 - `message.from` matches the agent's own inbox address (echo /
   loop guard — sent mail occasionally re-fires).
-- `message.from` matches the user's address (`USER_EMAIL` or
-  the install user's email — they CC'd themselves on a reply,
-  not a scheduling request).
+- `message.from` matches the user's address (the **Your email**
+  value in the Configuration section at the top of `SOUL.md`) —
+  they CC'd themselves on a reply, not a scheduling request.
 - The message has an out-of-office indicator (the `auto-replied`
   header, an `Auto-Submitted: auto-replied` value, or a body
   matching the OOO regex below).

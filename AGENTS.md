@@ -1,12 +1,16 @@
 This folder contains the source for a Skilled Agent originally built for the Valet runtime. Changes should follow the Skilled Agent open standard.
 
-Ported from the upstream [AgentMail Scheduling Agent](https://github.com/agentmail-to/agentmail-scheduling-agent) (MIT). Same product idea — an inbox that books your meetings — re-architected on top of the Valet platform: webhooks instead of polling, Slack as the operator console, dashboard slots instead of `.env` editing.
+Ported from the upstream [AgentMail Scheduling Agent](https://github.com/agentmail-to/agentmail-scheduling-agent) (MIT). Same product idea — an inbox that books your meetings — re-architected on top of the Valet platform: webhooks instead of polling, Slack as the operator console, the API key collected via a connector slot at deploy, and everything else (name, email, timezone, scheduling rules) edited in `SOUL.md` before deploy.
 
 ## Setup
 
 ### Connectors
 
-- **agentmail**: The AgentMail CLI, preconfigured with the API key from the connector slot. The connector name `agentmail` IS the CLI command on PATH — invoke it as `agentmail`, never as `npx agentmail-cli` or any npm package name. The agent uses it to list/create the dedicated inbox, list threads, read messages, and reply with the .ics invite attached. See `skills/agentmail/SKILL.md` for invocation patterns.
+- **agentmail**: The AgentMail CLI, preconfigured via the connector's `slot_descriptions.AGENTMAIL_API_KEY`. The connector name `agentmail` IS the CLI command on PATH — invoke it as `agentmail`, never as `npx agentmail-cli` or any npm package name. The agent uses it to list/create the dedicated inbox, list threads, read messages, and reply with the .ics invite attached. See `skills/agentmail/SKILL.md` for invocation patterns.
+
+| Slot | Description |
+|------|-------------|
+| `AGENTMAIL_API_KEY` | API key minted at agentmail.to (Settings → API Keys). Pasted during the deploy flow. |
 
 The .ics body itself is built by `skills/scheduler/calendar_invite.py` — a stdlib-only Python helper vendored verbatim from the upstream AgentMail template. It runs as `python3 skills/scheduler/calendar_invite.py --title ... --start-iso ... > /tmp/invite.ics`, rejects bare ISO strings without a timezone offset, and writes RFC 5545 to stdout. Requires `python3` on the agent runtime — no `pip install` needed.
 
@@ -17,15 +21,16 @@ The .ics body itself is built by `skills/scheduler/calendar_invite.py` — a std
 
 ### Secrets
 
-- **AGENTMAIL_API_KEY** — required, sourced from the AgentMail dashboard at agentmail.to. The connector slot collects it during the dashboard setup flow.
+- **AGENTMAIL_API_KEY** — the only secret. Collected at deploy time via the `agentmail` connector's `slot_descriptions.AGENTMAIL_API_KEY` entry in `valet.yaml`. Sourced from the AgentMail dashboard at agentmail.to.
 
-The Slack bot is provisioned via OAuth in the dashboard, so no other secrets are required.
+The Slack bot is provisioned via OAuth in the dashboard, so no other secrets are required. Per-user values (your name, email, timezone, scheduling rules) are NOT secrets — they live in the Configuration section at the top of `SOUL.md` and are edited before deploy.
 
 ### External Setup
 
-1. Sign up for AgentMail at agentmail.to and mint an API key (Settings → API Keys). Paste it into the `AGENTMAIL_API_KEY` slot during deploy. The agent creates its own dedicated scheduling inbox the first time the webhook fires — you don't need to create one upfront.
-2. Install the agent's Slack bot from the dashboard. Invite it to one channel where you want a window into the inbox. Status questions, manual sends, and rule updates all happen via @mention in that channel.
-3. After deploy, copy the agent's webhook URL from the dashboard, then run this once from your terminal (with your AgentMail API key in the environment):
+1. Sign up for AgentMail at agentmail.to, mint an API key (Settings → API Keys), and paste it into the `AGENTMAIL_API_KEY` slot during deploy. The agent creates its own dedicated scheduling inbox the first time the webhook fires — you don't need to create one upfront.
+2. **Open `SOUL.md` and edit the Configuration section at the top** — name, email, timezone, scheduling rules. Each user-editable value is marked `<EDIT — ...>` so it's impossible to miss. Save before clicking deploy. The agent reads these values on every fire.
+3. Install the agent's Slack bot from the dashboard. Invite it to one channel where you want a window into the inbox. Status questions, manual sends, and rule updates all happen via @mention in that channel.
+4. After deploy, copy the agent's webhook URL from the dashboard, then run this once from your terminal (with your AgentMail API key in the environment):
 
    ```sh
    PAGER=cat agentmail webhooks create \
@@ -35,7 +40,7 @@ The Slack bot is provisioned via OAuth in the dashboard, so no other secrets are
 
    AgentMail starts pushing each new email to the agent in real time. Test by sending an email to the agent's inbox address (you'll see it printed in the agent's first run log, or via `agentmail inboxes list`).
 
-4. Edit the **Scheduling rules** section in `SOUL.md` to match your real schedule. Defaults match the upstream template (sales Mon/Wed, internal Tue/Thu, personal Fri, no calls weekends, max 4 calls/day, 15-min buffer). You can also update rules at runtime by @mentioning the bot in Slack — it persists changes to `MEMORY.md`.
+You can also update the scheduling rules at runtime by @mentioning the Slack bot ("only do sales on Wed and Fri") — the agent persists overrides to `MEMORY.md` and reads from there first, falling back to the SOUL.md Configuration section.
 
 ## Customizing
 

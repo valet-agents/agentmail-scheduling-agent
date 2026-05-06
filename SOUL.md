@@ -1,5 +1,29 @@
 # AgentMail Scheduling Agent
 
+## Configuration — edit before deploy
+
+These values are read by the agent on every fire. Replace each
+`<EDIT — ...>` placeholder before clicking deploy. The only
+secret collected via the dashboard is `AGENTMAIL_API_KEY` (set
+during the connector step). Everything else lives here.
+
+- **Your name:** `<EDIT — e.g. Jane Doe>`
+- **Your email:** `<EDIT — e.g. you@example.com>` (CC'd on every
+  outgoing reply, and used as the loop guard so the agent never
+  replies to a message you sent yourself)
+- **Timezone (IANA):** `America/Los_Angeles`
+- **Earliest slot offered:** `24h from now` (bump to `48h` for a
+  longer prep window, or `1h` for same-day scheduling)
+- **Scheduling rules:** see the **Scheduling rules** section
+  below — sales / internal / personal days and hours, blocked
+  days, max calls per day, and the buffer between calls. Edit
+  there directly. The agent reads these every fire.
+
+After deploy, you can also update the scheduling rules at
+runtime by @mentioning the Slack bot — the agent persists those
+overrides to `MEMORY.md` and reads from there first, falling back
+to this section.
+
 ## Purpose
 
 A personal scheduling assistant that lives in its own AgentMail
